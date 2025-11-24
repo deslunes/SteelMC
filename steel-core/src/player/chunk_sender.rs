@@ -48,7 +48,6 @@ impl ChunkSender {
                     connection.send_packet(CChunkBatchFinished {
                         batch_size: chunks_to_send.len().try_into().unwrap_or(0),
                     });
-                    #[allow(clippy::cast_precision_loss)]
                     {
                         self.batch_quota -= chunks_to_send.len() as f32;
                     }

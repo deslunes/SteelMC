@@ -48,9 +48,8 @@ impl VarInt {
     ///
     /// # Errors
     /// - If the writer fails to write.
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub async fn write_async(self, write: &mut (impl AsyncWrite + Unpin)) -> Result<(), Error> {
-        let mut val = self.0;
+        let mut val = self.0 as u32;
         loop {
             let b: u8 = (val as u8) & 0b0111_1111;
             val >>= 7;
@@ -96,9 +95,8 @@ impl ReadFrom for VarInt {
 
 #[allow(missing_docs)]
 impl WriteTo for VarInt {
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn write(&self, writer: &mut impl Write) -> Result<(), Error> {
-        let mut val = self.0;
+        let mut val = self.0 as u32;
         loop {
             let b: u8 = val as u8 & 0x7F;
             val >>= 7;
@@ -114,7 +112,6 @@ impl WriteTo for VarInt {
 
 #[allow(missing_docs)]
 impl From<usize> for VarInt {
-    #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
     fn from(value: usize) -> Self {
         Self(value as _)
     }

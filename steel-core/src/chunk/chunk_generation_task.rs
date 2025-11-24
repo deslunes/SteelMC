@@ -48,9 +48,7 @@ impl<T> StaticCache2D<T> {
         let size = radius * 2 + 1;
         let min_x = center_x - radius;
         let min_z = center_z - radius;
-        let mut futures = Vec::with_capacity(
-            usize::try_from(size * size).expect("Impossible to have a negative size"),
-        );
+        let mut futures = Vec::with_capacity((size * size) as usize);
 
         for z_offset in 0..size {
             for x_offset in 0..size {
@@ -82,8 +80,7 @@ impl<T> StaticCache2D<T> {
         let rel_z = z - self.min_z;
 
         if rel_x >= 0 && rel_x < self.size && rel_z >= 0 && rel_z < self.size {
-            let index = usize::try_from(rel_z * self.size + rel_x)
-                .expect("Impossible to have a negative index");
+            let index = (rel_z * self.size + rel_x) as usize;
             &self.cache[index]
         } else {
             panic!(
@@ -124,26 +121,27 @@ pub struct ChunkGenerationTask {
 
 impl ChunkGenerationTask {
     /// Creates a new chunk generation task.
+    ///
+    /// # Panics
+    ///
+    /// Panics if a required chunk is not found in the chunk map when building the cache.
     #[must_use]
-    #[allow(clippy::unwrap_used, clippy::missing_panics_doc)]
     pub async fn new(pos: ChunkPos, target_status: ChunkStatus, chunk_map: Arc<ChunkMap>) -> Self {
-        let worst_case_radius = i32::try_from(
-            GENERATION_PYRAMID
-                .get_step_to(target_status)
-                .accumulated_dependencies
-                .get_radius_of(ChunkStatus::Empty),
-        )
-        .unwrap();
+        let worst_case_radius = GENERATION_PYRAMID
+            .get_step_to(target_status)
+            .accumulated_dependencies
+            .get_radius_of(ChunkStatus::Empty);
 
-        let cache = StaticCache2D::create(pos.0.x, pos.0.y, worst_case_radius, async |x, y| {
-            chunk_map
-                .chunks
-                .get_async(&ChunkPos(Vector2::new(x, y)))
-                .await
-                .expect("Chunk is required. Should be scheduled at this point")
-                .clone()
-        })
-        .await;
+        let cache =
+            StaticCache2D::create(pos.0.x, pos.0.y, worst_case_radius as i32, async |x, y| {
+                chunk_map
+                    .chunks
+                    .get_async(&ChunkPos(Vector2::new(x, y)))
+                    .await
+                    .expect("Chunk is required. Should be scheduled at this point")
+                    .clone()
+            })
+            .await;
 
         Self {
             pos,
