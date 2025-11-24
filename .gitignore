@@ -2,3 +2,5 @@
 /steel-registry/src/generated
 /steel-utils/src/generated
 /config
+profile.json.gz
+minecraft-src
